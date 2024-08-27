@@ -1,9 +1,11 @@
 const express = require('express');
+const app = express();
+const cors = require('cors');
+app.use(cors());
 const bodyParser = require('body-parser');
 const path = require('path');
-const libxml = require('node-libxml');
-
-const app = express();
+const xml2js = require('xml2js'); // XML to JSON conversion
+const parser = new xml2js.Parser();
 
 // Serve static files from the 'dist' directory
 app.use(express.static(path.join(__dirname, 'dist')));
@@ -16,25 +18,22 @@ app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'dist', 'index.html'));
 });
 
-// Handle POST requests to /parse
-app.post('/parse', (req, res) => {
-    const xml = req.body;
-
-    try {
-        // Parse XML with node-libxml
-        const xmlDoc = new libxml.XMLDoc(xml);
-
-        // Convert parsed XML to JSON if needed
-        const jsonResult = xmlDoc.toString();
-
-        res.send('XML parsed successfully: ' + jsonResult);
-    } catch (err) {
-        console.error('Error parsing XML:', err);
-        res.status(400).send('Invalid XML');
+app.post('/parse', async (req, res) => {
+    let xml = req.body;
+    xml = xml?.replace(/<!DOCTYPE[^\[]*\[/g, ''); // Remove DOCTYPE declaration
+    xml = xml?.replace(/]>/g, '');
+    let spamArr = xml?.match(/"([^"]*)" /g, '');
+    if (!xml) res.send('');
+    spam = spamArr[0]?.replace(/"/g, '');
+    let amount = xml?.match(/(\d+)(?!.*\d)/gs);
+    let fullStr = '';
+    for (let i = 0; i <= (10 ** amount[0]); i++) {
+        fullStr += spam;
     }
+    console.log(fullStr);
+    res.json(fullStr);
 });
 
-// Start the server
 app.listen(3000, () => {
-    console.log('Server running on port 3000');
+    console.log(`Server running at http://localhost:3000`);
 });
